@@ -22,6 +22,8 @@ module.exports = {
 
 const exampleOptions = {
     guilds: ['guildid'], // ignore guilds if you want it to work anywhere
+    // ensure that the bot is in the guild with the guildid
+
     // ephemeral: false, // if true, if slash, only shows response to commander, if not slash, sends response to dm
 
     // options array of options (arguments). it can be a simple string, or an object with name, desc, and type.

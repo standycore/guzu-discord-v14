@@ -88,7 +88,7 @@ class CommandLoader {
             // register guilded slash commands
             for (const [guild, commands] of Object.entries(commandsByGuild)) {
                 const data = await rest.put(
-                    Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guild),
+                    Routes.applicationGuildCommands(Global.clientId, guild),
                     {
                         body: commands
                     }
@@ -101,7 +101,7 @@ class CommandLoader {
 
             // register general slash commands
             const data = await rest.put(
-                Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
+                Routes.applicationCommands(Global.clientId),
                 {
                     body: generalCommands
                 }

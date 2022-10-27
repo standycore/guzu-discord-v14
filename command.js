@@ -12,13 +12,50 @@ class Command {
         this.executable = options.executable || options.execute || options.callback;
 
         this.name = options.name;
+        this.enforcedName = enforceCharacters(this.name);
         this.description = options.description || 'no description';
         // can be called in dm
         this.ephemeral = (options.DMPermission !== undefined ? options.DMPermission : undefined) || 
         (options.ephemeral !== undefined ? options.ephemeral : undefined) || false;
 
-        this.args = options.options || options.args || [];
-        // sort options by whether they are required or not
+        const tempArgs = options.options || options.args || [];
+        
+        this.args = [];
+
+        // option name to array of autocomplete choices (as strings);
+        this.autocompleteChoices = {};
+
+        // fix args to options format {name, desc, type} object
+        // type should be guaranteed inside addOptionFunctionName[arg.type]
+        // name and desc should be string
+        // name should only have a-z
+        tempArgs.forEach((arg) => {
+            
+            if (!(arg instanceof Object)) {
+                // enforces characters in allowedOptionNameCharacters
+                const name = enforceCharacters(arg);
+
+                // creates option and pushes it
+                const option = {
+                    name: `${name}`,
+                    description: `${arg}`,
+                    type: 'string'
+                }
+                this.args.push(option);
+            } else {
+                if (!arg.name || !(arg.name instanceof String)) {
+                    arg.name = `${arg.name}`;
+                }
+                if (!arg.description || !(arg.description instanceof String)) {
+                    arg.description = `${arg.description}`;
+                }
+                if (!arg.type || !(arg.type instanceof String) || !addOptionFunctionName[arg.type]) {
+                    arg.type = 'string';
+                }
+                this.args.push(arg);
+            }
+        })
+        // sort args by whether they are required or not
         this.args.sort((a, b) => {
             const aRequired = (a instanceof Object && a.required);
             const bRequired = (b instanceof Object && b.required);
@@ -32,57 +69,72 @@ class Command {
 
         if (this.isSlashCommand) {
             this.slashCommandBuilder = new SlashCommandBuilder()
-                .setName(this.name)
+                .setName(this.enforcedName)
                 .setDescription(this.description)
                 .setDMPermission(this.ephemeral);
-            const args = this.args;
-            if (args && args.length > 0) {
-                args.forEach((arg) => {
 
-                    // if arg is not an object (a string), just make it a string option
-                    if (!(arg instanceof Object)) {
-                        this.slashCommandBuilder.addStringOption((option) => {
-                            option.setName(arg)
-                                .setDescription(arg)
-                            return option;
-                        })
-                        return;
-                    }
+            this.args.forEach((arg) => {
 
-                    const type = (arg.type && addOptionFunctionName[arg.type] ? arg.type : undefined) || 'string';
-                    const functionName = addOptionFunctionName[type];
-                    this.slashCommandBuilder[functionName]((option) => {
-                        option.setName(arg.name)
-                        option.setDescription(arg.description || arg.name);
-                        option.setRequired(arg.required !== undefined ? arg.required : false);
+                // console.log(arg);
+                // if arg is not an object (a string), just make it a string option
+                // if (!(arg instanceof Object)) {
+                //     this.slashCommandBuilder.addStringOption((option) => {
+                //         option.setName(arg)
+                //             .setDescription(arg)
+                //         return option;
+                //     })
+                //     return;
+                // }
 
-                        if (arg.autocomplete) {
+                const type = (arg.type && addOptionFunctionName[arg.type] ? arg.type : undefined) || 'string';
+                const functionName = addOptionFunctionName[type];
+                this.slashCommandBuilder[functionName]((option) => {
+                    option.setName(arg.name)
+                    option.setDescription(arg.description || arg.name);
+                    option.setRequired(arg.required !== undefined ? arg.required : false);
 
-                            option.setAutocomplete(true);
+                    if (arg.autocomplete && false) {
 
-                        } else {
+                        option.setAutocomplete(true);
 
-                            const choices = [];
-                            if (arg.choices && arg.choices.length > 0) {
-                                arg.choices.forEach((choice, i) => {
-                                    if (i > 24) {
-                                        return;
-                                    }
-                                    if (choice instanceof Object) {
-                                        choices.push(choice);
-                                    } else {
-                                        choices.push({ name: `${choice}`, value: choice })
-                                    }
-                                })
-                            }
-                            option.addChoices(...choices);
+                        const choices = [];
+                        if (arg.choices && arg.choices.length > 0) {
+                            arg.choices.forEach((choice) => {
+                                if (choice instanceof Object) {
+                                    choices.push(`${choice.value}`);
+                                } else {
+                                    choices.push(`${choice}`);
+                                }
+                            })
+                        }
+                        
 
+                    } else {
+
+                        const choices = [];
+                        if (arg.choices && arg.choices.length > 0) {
+                            arg.choices.forEach((choice) => {
+                                if (choice instanceof Object) {
+                                    choices.push(choice);
+                                } else {
+                                    choices.push({ name: `${choice}`, value: choice });
+                                }
+                            })
                         }
 
-                        return option;
-                    })
+                        if (arg.autocomplete) {
+                            option.setAutocomplete(true);
+                            this.autocompleteChoices[arg.name] = choices;
+                        } else {
+                            option.addChoices(...(choices.slice(0,25)));
+                        }
+                        
+
+                    }
+
+                    return option;
                 })
-            }
+            })
         }
     }
 
@@ -97,6 +149,21 @@ class Command {
             console.warn(`this command has no executable`);
         }
     }
+}
+
+
+const allowedOptionNameCharacters = 'abcdefghijklmnopqrstuvwxyz'
+
+function enforceCharacters(string, characters = allowedOptionNameCharacters) {
+    string = `${string}`.toLowerCase();
+    let newString = '';
+    for (let i = 0; i < string.length; i++) {
+        const char = string.charAt(i);
+        if (characters.includes(char)) {
+            newString += char;
+        }
+    }
+    return newString;
 }
 
 const addOptionFunctionName = {

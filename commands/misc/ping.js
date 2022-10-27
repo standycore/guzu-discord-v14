@@ -18,16 +18,19 @@ module.exports = {
         name: 'optionc',
         description: 'this is the third option',
         type: 'int',
-        // choices: [
-        //     1979,
-        //     { 
-        //         name: 'choiceb',
-        //         value: 200
-        //     }
-        // ],
+        choices: [
+            1979,
+            { 
+                name: 'choiceb',
+                value: 200
+            }
+        ],
+        autocomplete: true
     }
     ],
-    executable: async ({interaction}) => {
+    executable: async ({interaction, message}) => {
+        console.log('ping called!!')
+
         await interaction.reply('pong');
     }
 }
