@@ -21,6 +21,7 @@ module.exports = {
 }
 
 const exampleOptions = {
+    cooldown: 5000, // default 5000
     guilds: ['guildid'], // ignore guilds if you want it to work anywhere
     // ensure that the bot is in the guild with the guildid
 

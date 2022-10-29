@@ -14,7 +14,7 @@ for (let i = 0; i < processArgs.length; i++) {
 
 // discord.js v14
 
-const { Client, Events, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
+const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 require('dotenv/config');
 if (Global.testing) {
     Global.discordToken = process.env.DISCORD_TEST_TOKEN;
@@ -40,8 +40,6 @@ const commands = new Collection();
 client.commands = commands;
 CommandProcessor.commands = commands;
 CommandProcessor.client = client;
-
-const rest = new REST({ version: '10' }).setToken(Global.discordToken);
 
 client.on(Events.ClientReady, async () => {
     if (Global.testing) {

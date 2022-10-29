@@ -3,7 +3,12 @@ const { SlashCommandBuilder } = require('discord.js');
 class Command {
     constructor(options = {}) {
         this.options = options;
+
+        // whether this is a slash command or not (default false)
         this.isSlashCommand = options.isSlashCommand !== undefined ? options.isSlashCommand : false;
+
+        // sets the command call cooldown (default 5000)
+        this.cooldown = options.cooldown || 5000;
         
         // array of allowed guilds. if empty, allow everywhere
         this.guilds = options.guilds || (options.guild !== undefined ? [options.guild] : []);
